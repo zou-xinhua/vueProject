@@ -1,17 +1,20 @@
 <template>
   <div>
+    <select v-model="selectedLanguage" class="select">
+			<option v-for="lang in languages" :key="lang.value" :value="lang">{{lang.text}}</option>
+		</select>
     <table width="100%" class="table">
       <thead>
         <tr @click="sortTable($event)">
           <th colspan="1" rowspan="2"><input :checked="checkAll" type="checkbox"  @change="changeAll($event)"></th>
           <th colspan="1" rowspan="2" width="20%">ID</th>
-          <th colspan="1" rowspan="2" width="20%">Name</th>
-          <th colspan="1" rowspan="2" width="20%">Location</th>
+          <th colspan="1" rowspan="2" width="20%">{{ 'Name' | translate }}</th>
+          <th colspan="1" rowspan="2" width="20%">{{ 'Location' | translate }}</th>
           <th colspan="2" rowspan="1" width="30%">
-            Phone
+            {{ 'Phone' | translate }}
           </th>
         </tr>
-        <tr @click="sortTable($event)"><th>Office</th><th>Cell</th></tr>
+        <tr @click="sortTable($event)"><th>{{ 'Office' | translate }}</th><th>{{ 'Cell' | translate }}</th></tr>
       </thead>
       <tbody>
         <tr v-for="(item, index) in tableData" :key="item.id">
@@ -38,14 +41,15 @@
         </tr>
       </tbody>
     </table>
-    <button type="button" class="btn" :disabled="!tableData.some(item => item.checked)" color="error" @click="deleteData">Delete</button>
-    <button type="button" class="btn" :disabled="!tableData.some(item => item.checked)" color="warning" @click="update">Update</button>
-    <button type="button" class="btn" color="warning" @click="addRow">Add</button>
+    <button type="button" class="btn" :disabled="!tableData.some(item => item.checked)" color="error" @click="deleteData">{{ 'Delete' | translate }}</button>
+    <button type="button" class="btn" :disabled="!tableData.some(item => item.checked)" color="warning" @click="update">{{ 'Update' | translate }}</button>
+    <button type="button" class="btn" color="warning" @click="addRow">{{ 'Add' | translate }}</button>
   </div>
 </template>
 
 <script>
-
+import { mapState } from 'vuex';
+import Vue from 'vue';
 export default {
   name: 'App',
   data() {
@@ -66,8 +70,18 @@ export default {
           office: 'z55778',
           cell: '350-353-1239'
         }],
-      editFlag: false
+      selectedLanguage: this.$store.state.curLanguage,
     }
+  },
+  computed: mapState(['languages']),
+  watch: {
+    'selectedLanguage': function(newLang) {
+      Vue.i18n.set(newLang.value);
+      this.$store.commit('setLanguage', newLang.value);
+    }
+  },
+  created() {
+    Vue.i18n.set(this.$store.state.curLanguage.value);
   },
   methods: {
     changeAll(e) {
@@ -79,8 +93,7 @@ export default {
     changeRow(e, row, index) {
       row.checked = e.target.checked
       this.tableData.splice(index, 1, row)
-      if (e.target.checked)
-        this.checkAll = this.tableData.every(item => item.checked)
+      this.checkAll = this.tableData.every(item => item.checked)
       e.stopPropagation();
     },
     sortTable(e) {
@@ -111,17 +124,17 @@ export default {
       this.tableData = this.tableData.filter(item => !item.checked)
     },
     update() {
-      let str = '更新ID为'
-      let indexs = '新增第'
+      let ids = []
+      let indexs = []
       this.tableData.forEach((item, index) => {
         if (item.checked) {
           if (item.id)
-            str += `${item.id} `
+            ids.push(item.id)
           else
-            indexs += `${index+1}`
+            indexs.push(index+1)
         }
       })
-      window.confirm(`${str} ${indexs}条`)
+      window.confirm(`更新ID为${ids.length ? ids.join(',') : '-'}，新增${indexs.length ? indexs.join(',') : '-'}条`)
     }
   }
 }
@@ -148,31 +161,32 @@ export default {
   font-weight: 500;
 }
 .btn{
-    display: inline-block;
-    margin: 20px;
-    line-height: 1;
-    white-space: nowrap;
-    cursor: pointer;
-    background: #fff;
-    border: 1px solid #dcdfe6;
-    color: #606266;
-    -webkit-appearance: none;
-    text-align: center;
-    box-sizing: border-box;
-    outline: none;
-    padding: 12px 20px;
-    font-size: 14px;
-    border-radius: 4px;
+  display: inline-block;
+  margin: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #dcdfe6;
+  color: #606266;
+  text-align: center;
+  box-sizing: border-box;
+  outline: none;
+  padding: 12px 20px;
+  font-size: 14px;
+  border-radius: 4px;
 }
 .btn[color="error"]{
   color:#f07474;
   border-color: #f07474;
 }
 .btn[color="warning"]{
-  color:#f4bf71;
-  border-color:#f4bf71;
+  color: #f4bf71;
+  border-color: #f4bf71;
 }
 .btn[disabled]{
   cursor: not-allowed;
+}
+.select{
+  margin-bottom: 10px;
 }
 </style>
